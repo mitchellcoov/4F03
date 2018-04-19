@@ -12,6 +12,17 @@
 
 #define epsilon 0.000000000000000222
 
+typedef struct Body{
+	//position
+	vec3 p;
+	//velocity
+	vec3 v;
+	//net force
+	vec3 f;
+	//mass
+	double m;
+};
+
 int main(int argc, char* argv[]){
 	
 	if( argc != 10){
