@@ -1,5 +1,5 @@
 CC=mpiCC
-CFLAGS=-c -g -Wall -std=c++11
+CFLAGS=-c -g -Wall -std=c++11 -fopenmp
 LDFLAGS=-lm
 OBJECTS=$(SOURCES:.cpp=.o)
 

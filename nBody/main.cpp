@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+#include <omp.h>
 #include <mpi.h>
 #include <math.h>
 
@@ -11,6 +12,10 @@
 #include "properties.h"
 
 #define epsilon 0.000000000000000222
+
+double G = 0.0000000000667384;
+
+vec3 forceKonQ(vec3 posq, vec3 posk, double mk);
 
 typedef struct Body{
 	//position
@@ -62,6 +67,32 @@ int main(int argc, char* argv[]){
 		width = stoi(argv[7]);
 		height = stoi(argv[8]);
 
+		int totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
+		Body particles[totalParticles];
+
+		#pragma omp parallel num_threads(3) 
+		{
+			switch (omp_get_thread_num()) {
+				case 0:
+					for (int i = 0; i < numParticlesLight; i++) {
+						particles[i].p = 
+						particles[i].v = 
+						particles[i].m = rangeRand((double)drand(), (double)properties::massLightMin, (double)properties::massLightMax);
+					}
+				case 1:
+					for (int i = numParticlesLight; i < numParticlesMedium + numParticlesLight; i++) {
+						particles[i].p = 
+						particles[i].v = 
+						particles[i].m = rangeRand((double)drand(), (double)properties::massMediumMin, (double)properties::massMediumMax);
+					}
+				case 2:
+					for (int i = numParticleMedium + numParticlesLight; i < totalParticles; i++) {
+						particles[i].p = 
+						particles[i].v = 
+						particles[i].m = rangeRand((double)drand(), (double)properties::massHeavyMin, (double)properties::massHeavyMax);
+					}
+			}
+		}
 
 		//almost done, just save the image
 		saveBMP(argv[9], image, width, height);
@@ -76,3 +107,21 @@ int main(int argc, char* argv[]){
 	MPI_Finalize();
 	return 0;
 }
+
+//The force of particle k on particle q
+vec3 forceKonQ(vec3 posq, vec3 posk, double mk) {
+	vec3 diff = posq - posk;
+	double mag = diff.Magnitude;
+	return diff*(mk/mag);
+}
+
+vec3 randVelocity(double min, double max) {
+	double 
+}
+
+//Random number in range
+double rangeRand(double rand, double start, double end) {
+	double frand = (rand / RAND_MAX)*(end - start) + start;
+	return frand;
+}
+
