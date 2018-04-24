@@ -8,6 +8,7 @@ class vec3
 public:
 	// Data
 	double x, y, z;
+	int particleColor;
 
 	// Ctors
 	vec3( double InX, double InY, double InZ ) : x( InX ), y( InY ), z( InZ )
@@ -20,12 +21,12 @@ public:
 		}
 
 	// Operator Overloads
-	inline bool operator== (const vec3& V2) const 
+	inline bool operator== (const vec3& V2) const
 		{
 		return (x == V2.x && y == V2.y && z == V2.z);
 		}
 
-	inline vec3 operator+ (const vec3& V2) const 
+	inline vec3 operator+ (const vec3& V2) const
 		{
 		return vec3( x + V2.x,  y + V2.y,  z + V2.z);
 		}
@@ -106,7 +107,7 @@ public:
 		double fMag = ( x*x + y*y + z*z );
 		if (fMag == 0) {return;}
 
-		double fMult = 1.0/sqrt(fMag);            
+		double fMult = 1.0/sqrt(fMag);
 		x *= fMult;
 		y *= fMult;
 		z *= fMult;
@@ -128,7 +129,7 @@ inline double clamp(double d, double min, double max)
   return d;
 }
 
-inline void clamp(vec3 &v, double min, double max) 
+inline void clamp(vec3 &v, double min, double max)
 {
   v.x = clamp(v.x,min,max);
   v.y = clamp(v.y,min,max);

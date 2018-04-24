@@ -29,7 +29,7 @@ typedef struct Body{
 };
 
 int main(int argc, char* argv[]){
-	
+
 	if( argc != 10){
 		printf("Usage: %s numParticlesLight numParticleMedium numParticleHeavy numSteps subSteps timeSubStep imageWidth imageHeight imageFilenamePrex\n", argv[0]);
 	}
@@ -66,34 +66,41 @@ int main(int argc, char* argv[]){
 
 		width = stoi(argv[7]);
 		height = stoi(argv[8]);
+		int depth = 10;
+
 
 		int totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
 		Body particles[totalParticles];
 
-		#pragma omp parallel num_threads(3) 
+		#pragma omp parallel num_threads(3)
 		{
 			switch (omp_get_thread_num()) {
 				case 0:
 					for (int i = 0; i < numParticlesLight; i++) {
-						particles[i].p = 
-						particles[i].v = 
+						particles[i].p = vec3(drand48()*width,drand48()*height,drand48()*depth,vec3 properties::colourLight);
+						particles[i].v = rangeRand((double)drand(), (double)properties::velocityLightMin, (double)properties::velocityLightMax);
 						particles[i].m = rangeRand((double)drand(), (double)properties::massLightMin, (double)properties::massLightMax);
 					}
 				case 1:
 					for (int i = numParticlesLight; i < numParticlesMedium + numParticlesLight; i++) {
-						particles[i].p = 
-						particles[i].v = 
+						particles[i].p = vec3(drand48()*width,drand48()*height,drand48()*depth,vec3 properties::colourMedium);
+						particles[i].v = rangeRand((double)drand(), (double)properties::velocityMediumMin, (double)properties::velocityMediumMax);
 						particles[i].m = rangeRand((double)drand(), (double)properties::massMediumMin, (double)properties::massMediumMax);
 					}
 				case 2:
 					for (int i = numParticleMedium + numParticlesLight; i < totalParticles; i++) {
-						particles[i].p = 
-						particles[i].v = 
+						particles[i].p = vec3(drand48()*width,drand48()*height,drand48()*depth,vec3 properties::colourHeavy);
+						particles[i].v = rangeRand((double)drand(), (double)properties::velocityHeavyMin, (double)properties::velocityHeavyMax);
 						particles[i].m = rangeRand((double)drand(), (double)properties::massHeavyMin, (double)properties::massHeavyMax);
 					}
 			}
 		}
 
+		for(int j=0; g < totalParticles; g++){
+			int xval = particles[j].x;
+			int yval = particles[j].y;
+
+		}
 		//almost done, just save the image
 		saveBMP(argv[9], image, width, height);
 	}
@@ -116,7 +123,7 @@ vec3 forceKonQ(vec3 posq, vec3 posk, double mk) {
 }
 
 vec3 randVelocity(double min, double max) {
-	double 
+	double
 }
 
 //Random number in range
@@ -124,4 +131,3 @@ double rangeRand(double rand, double start, double end) {
 	double frand = (rand / RAND_MAX)*(end - start) + start;
 	return frand;
 }
-
