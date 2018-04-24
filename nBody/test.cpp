@@ -70,13 +70,19 @@ int main(int argc, char* argv[]){
 
 		int totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
 
+		image = (unsigned char *)malloc(3*width*height*sizeof(unsigned char));
 
-		Body particles[totalParticles];
-		int * w = (int *) malloc(sizeof(int) * numParticlesTotal);
-		double * s_x = (double *) malloc(sizeof(double) * numParticlesTotal);
- 		double * s_y = (double *) malloc(sizeof(double) * numParticlesTotal);
- 		double * v_x = (double *) malloc(sizeof(double) * numParticlesTotal);
- 		double * v_y = (double *) malloc(sizeof(double) * numParticlesTotal);
+		for (int b = 0; b < (3*width*height); b++)
+		{
+			image[b] = unsigned char 0;
+		}
+
+		particles_s particles[totalParticles];
+		// int * w = (int *) malloc(sizeof(int) * numParticlesTotal);
+		// double * s_x = (double *) malloc(sizeof(double) * numParticlesTotal);
+ 		// double * s_y = (double *) malloc(sizeof(double) * numParticlesTotal);
+ 		// double * v_x = (double *) malloc(sizeof(double) * numParticlesTotal);
+ 		// double * v_y = (double *) malloc(sizeof(double) * numParticlesTotal);
 
 		#pragma omp parallel num_threads(3)
 		{
@@ -139,6 +145,13 @@ int main(int argc, char* argv[]){
 			}
 		}
 
+		for (int j = 0; j < totalParticles; g++){
+			int Xval = (int) particles[j].p[X];
+			int Yval = (int) particles[j].p[Y];
+			image[(Xval*3)+Yval*width*3] = (unsigned char) particles[j];
+			image[(Xval*3)+Yval*width*3+1] = (unsigned char) particles[j];
+			image[(Xval*3)+Yval*width*3+2] = (unsigned char) particles[j];
+		}
 
 			//almost done, just save the image
 		saveBMP(argv[9], image, width, height);
