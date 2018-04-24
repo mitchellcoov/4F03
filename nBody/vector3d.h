@@ -8,11 +8,12 @@ class vec3
 public:
 	// Data
 	double x, y, z;
-	int particleColor;
+
 
 	// Ctors
-	vec3( double InX, double InY, double InZ ) : x( InX ), y( InY ), z( InZ )
+	vec3( double InX, double InY, double InZ) : x( InX ), y( InY ), z( InZ )
 		{
+
 		}
 	void SetDoublePoint( const double *v ) {  x=v[0]; y=v[1]; z=v[2]; }
 

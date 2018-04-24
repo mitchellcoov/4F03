@@ -67,39 +67,62 @@ int main(int argc, char* argv[]){
 		width = stoi(argv[7]);
 		height = stoi(argv[8]);
 		int depth = 10;
+		xpos = (double *)malloc(N * sizeof(double));
+  	ypos = (double *)malloc(N * sizeof(double));
+		zpos = (double *)malloc(N * sizeof(double));
+
+		printf("numParticlesLight: %d\nnumParticlesMedium: %d\nnumParticlesLarge: %d\nnumSteps: %d\nsubSteps: %d\ntimeSubStep: %f\nWidth: %d\nHeight: %d\n",numParticlesLight,numParticleMedium,numParticleHeavy,numSteps,numSubSteps,timeSubStep, width,height);
 
 
 		int totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
-		Body particles[totalParticles];
 
+		//Generate black image to put stuff on
+		for(int a=0; a<(3*frameSize);a++){
+				image[a]=(unsigned char) 0;
+		}
+
+
+		Body particles[totalParticles];
 		#pragma omp parallel num_threads(3)
 		{
 			switch (omp_get_thread_num()) {
 				case 0:
 					for (int i = 0; i < numParticlesLight; i++) {
-						particles[i].p = vec3(drand48()*width,drand48()*height,drand48()*depth,vec3 properties::colourLight);
-						particles[i].v = rangeRand((double)drand(), (double)properties::velocityLightMin, (double)properties::velocityLightMax);
-						particles[i].m = rangeRand((double)drand(), (double)properties::massLightMin, (double)properties::massLightMax);
+						// xpos[i] = drand48()*(width-1);
+						// ypos[i] = drand48()*(height-1);
+						// zpos[i] = depth;
+						// particles[i].p = vec3(xpos[i],ypos[i],zpos[i],vec3 properties::colourLight);
+						// particles[i].v = rangeRand((double)drand48(), (double)properties::velocityLightMin, (double)properties::velocityLightMax);
+						// particles[i].m = rangeRand((double)drand48(), (double)properties::massLightMin, (double)properties::massLightMax);
+						particles[i].p = vec3(xpos[i],ypos[i],zpos[i],vec3 properties::colourLight);
+						particles[i].v = rangeRand((double)drand48(), (double)properties::velocityLightMin, (double)properties::velocityLightMax);
+						particles[i].m = rangeRand((double)drand48(), (double)properties::massLightMin, (double)properties::massLightMax);
 					}
 				case 1:
 					for (int i = numParticlesLight; i < numParticlesMedium + numParticlesLight; i++) {
-						particles[i].p = vec3(drand48()*width,drand48()*height,drand48()*depth,vec3 properties::colourMedium);
-						particles[i].v = rangeRand((double)drand(), (double)properties::velocityMediumMin, (double)properties::velocityMediumMax);
-						particles[i].m = rangeRand((double)drand(), (double)properties::massMediumMin, (double)properties::massMediumMax);
+						// xpos[i] = drand48()*(width-1);
+						// ypos[i] = drand48()*(height-1);
+						// zpos[i] = depth;
+						// particles[i].p = vec3(xpos[i],ypos[i],zpos[i],vec3 properties::colourMedium);
+						// particles[i].v = rangeRand((double)drand48(), (double)properties::velocityMediumMin, (double)properties::velocityMediumMax);
+						// particles[i].m = rangeRand((double)drand48(), (double)properties::massMediumMin, (double)properties::massMediumMax);
 					}
 				case 2:
 					for (int i = numParticleMedium + numParticlesLight; i < totalParticles; i++) {
-						particles[i].p = vec3(drand48()*width,drand48()*height,drand48()*depth,vec3 properties::colourHeavy);
-						particles[i].v = rangeRand((double)drand(), (double)properties::velocityHeavyMin, (double)properties::velocityHeavyMax);
-						particles[i].m = rangeRand((double)drand(), (double)properties::massHeavyMin, (double)properties::massHeavyMax);
+						// xpos[i] = drand48()*(width-1);
+						// ypos[i] = drand48()*(height-1);
+						// zpos[i] = depth;
+						// particles[i].p = vec3(xpos[i],ypos[i],zpos[i],vec3 properties::colourHeavy);
+						// particles[i].v = rangeRand((double)drand48(), (double)properties::velocityHeavyMin, (double)properties::velocityHeavyMax);
+						// particles[i].m = rangeRand((double)drand48(), (double)properties::massHeavyMin, (double)properties::massHeavyMax);
 					}
 			}
 		}
 
-		for(int j=0; g < totalParticles; g++){
-			int xval = particles[j].x;
-			int yval = particles[j].y;
+		unsigned char* image = (unsigned char *) calloc(3*width*height, sizeof(unsigned char));
 
+		for(int j=0; g < totalParticles; g++){
+			image[j] = particles[j];
 		}
 		//almost done, just save the image
 		saveBMP(argv[9], image, width, height);
