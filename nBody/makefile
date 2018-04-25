@@ -5,7 +5,7 @@ OBJECTS=$(SOURCES:.cpp=.o)
 
 SOURCES=main.cpp savebmp.c
 
-EXECUTABLE=x.project
+EXECUTABLE=project.x
 
 all: $(SOURCES) $(EXECUTABLE)
 

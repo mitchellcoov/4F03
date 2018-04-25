@@ -13,7 +13,8 @@
 
 #define epsilon 0.000000000000000222
 
-double G = 0.0000000000667384;
+//double G = 0.0000000000667384;
+double G = 10.5;
 
 vec3 forceKonQ(vec3 posq, vec3 posk, double mk);
 
@@ -176,8 +177,8 @@ int main(int argc, char* argv[]){
 				//calculate acceleration from force of k exerted on q
 				for(int i = 0; i < totalParticles; i++){
 					Body q = particles[i];
-					for(int j = 0; j < totalParticles; j++){
-						if(i == j) continue;
+					for(int j = i + 1; j < totalParticles; j++){
+						//if(i == j) continue;
 						Body k = particles[j];
 
 						vec3 dp = q.p - k.p;
@@ -196,13 +197,38 @@ int main(int argc, char* argv[]){
 				}
 				//update position & velocity for each particle based on acceleration
 				for(int i = 0; i < totalParticles; i++){
+					int pm = particles[i].m;
+
 					particles[i].v.x += accel[i].x * timeSubStep;
 					particles[i].v.y += accel[i].y * timeSubStep;
 					particles[i].v.z += accel[i].z * timeSubStep;
+					//clamp (restrict) velocity values to given range
+					if(pm >= 11 && pm <= 15){
+						clamp(particles[i].v.x, velocityHeavyMin, velocityHeavyMax);
+						clamp(particles[i].v.y, velocityHeavyMin, velocityHeavyMax);
+						clamp(particles[i].v.z, velocityHeavyMin, velocityHeavyMax);
+					}else if(pm >= 6 && pm <= 10){
+						clamp(particles[i].v.x, velocityMediumMin, velocityMediumMax);
+						clamp(particles[i].v.y, velocityMediumMin, velocityMediumMax);
+						clamp(particles[i].v.z, velocityMediumMin, velocityMediumMax);
+					}else if(pm >= 1 && pm <= 5){
+						clamp(particles[i].v.x, velocityLightMin, velocityLightMax);
+						clamp(particles[i].v.y, velocityLightMin, velocityLightMax);
+						clamp(particles[i].v.z, velocityLightMin, velocityLightMax);
+					}
+					//printf("%d v - (%f, %f, %f)\n", i, particles[i].v.x, particles[i].v.y, particles[i].v.z);
 
 					particles[i].p.x += particles[i].v.x * timeSubStep;
 					particles[i].p.y += particles[i].v.y * timeSubStep;
 					particles[i].p.z += particles[i].v.z * timeSubStep;
+					//handle boundary position conditions
+					if(particles[i].p.x < 0 || particles[i].p.x > width){
+						particles[i].v.x *= -1;
+					}else if(particles[i].p.y < 0 || particles[i].p.y > height){
+						particles[i].v.y *= -1;
+					}else if(particles[i].p.z < 0 || particles[i].p.z > zDepth){
+						particles[i].v.z *= -1;
+					}
 				}
 			}
 
@@ -224,7 +250,7 @@ int main(int argc, char* argv[]){
 			std::string frameNum = std::to_string(frame);
 			filename.append(5 - frameNum.length(), '0');
 			filename = filename + frameNum + std::string(".bmp");
-			printf("%s", filename.c_str());
+			//printf("%s", filename.c_str());
 			saveBMP(filename.c_str(), image, width, height);
 		}
 			
