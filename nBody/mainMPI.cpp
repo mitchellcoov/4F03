@@ -59,12 +59,14 @@ int main(int argc, char* argv[]){
 		printf("Usage: %s numParticlesLight numParticleMedium numParticleHeavy numSteps subSteps timeSubStep imageWidth imageHeight imageFilenamePrex\n", argv[0]);
 	}
 
+	int numParticlesLight = atoi(argv[1]);
+	int numParticlesMedium = atoi(argv[2]);
+	int numParticlesHeavy = atoi(argv[3]);
+	int totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
+
 	int p, my_rank;
 
 	//variables
-	int numParticlesLight = 0;
-	int numParticlesMedium = 0;
-	int numParticlesHeavy = 0;
 
 	int numSteps = 0;
 	int subSteps = 0;
@@ -72,16 +74,15 @@ int main(int argc, char* argv[]){
 
 	int width, height;
 
-	Body *particles;
-	vec3 *accel;
+	Body particles[totalParticles];
+	vec3 accel[totalParticles];
 	int zDepth;
-	int totalParticles;
 
 	//temporary (mpi) arrays
-	vec3 *pos;
-	double *mas;
+	vec3 pos[totalParticles];
+	double mas[totalParticles];
 
-	unsigned char* image;
+	unsigned char* image;	
 
 	double start, end;
 	double *timing;
@@ -96,11 +97,12 @@ int main(int argc, char* argv[]){
 	MPI_Type_contiguous(3, MPI_DOUBLE, &mpi_vec3);
 	MPI_Type_commit(&mpi_vec3);
 
+	int blockSize = totalParticles / p;
+	vec3 accelBlock[blockSize];
+	
+
 	//root node stuff goes here
 	if(my_rank == 0){
-		numParticlesLight = atoi(argv[1]);
-		numParticlesMedium = atoi(argv[2]);
-		numParticlesHeavy = atoi(argv[3]);
 
 		numSteps = atoi(argv[4]);
 		subSteps = atoi(argv[5]);
@@ -116,16 +118,9 @@ int main(int argc, char* argv[]){
 		for(int i = 0; i < (width * height * 3); i++){
 			image[i] = 0;
 		}
-
 		timing = (double *)malloc(numSteps * subSteps * sizeof(double));
 
-		//initialize light particles (randomized)
-		totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
-		particles = (Body *)malloc(totalParticles * sizeof(Body));
-		accel = (vec3 *)malloc(totalParticles * sizeof(vec3));
-
-		pos = (vec3 *)malloc(totalParticles * sizeof(vec3));
-		mas = (double *)malloc(totalParticles * sizeof(double));
+		//initialize light particles (randomized)		
 
 		for(int i = 0; i < numParticlesLight; i++){
 			//mass
@@ -136,6 +131,7 @@ int main(int argc, char* argv[]){
 			particles[i].p.x = genRand(drand48(), (double)0, (double)(width - 1));
 			particles[i].p.y = genRand(drand48(), (double)0, (double)(height - 1));
 			particles[i].p.z = genRand(drand48(), (double)0, (double)(zDepth - 1));
+
 			//temp
 			pos[i].x = particles[i].p.x;
 			pos[i].y = particles[i].p.y;
@@ -151,6 +147,8 @@ int main(int argc, char* argv[]){
 				particles[i].v.z = -1 * genRand(drand48(), velocityLightMin, velocityLightMax);
 			}	
 		}
+
+		
 		//initialize medium particles (randomized)
 		for(int i = numParticlesLight; i < (numParticlesLight + numParticlesMedium); i++){
 			//mass
@@ -161,6 +159,7 @@ int main(int argc, char* argv[]){
 			particles[i].p.x = genRand(drand48(), (double)0, (double)(width - 1));
 			particles[i].p.y = genRand(drand48(), (double)0, (double)(height - 1));
 			particles[i].p.z = genRand(drand48(), (double)0, (double)(zDepth - 1));
+			
 			//temp
 			pos[i].x = particles[i].p.x;
 			pos[i].y = particles[i].p.y;
@@ -176,8 +175,10 @@ int main(int argc, char* argv[]){
 				particles[i].v.z = -1 * genRand(drand48(), velocityMediumMin, velocityMediumMax);
 			}
 		}
+
 		//initialize heavy particles (randomized)
 		for(int i = (numParticlesLight + numParticlesMedium); i < totalParticles; i++){
+			
 			//mass
 			particles[i].m = genRand(drand48(), massHeavyMin, massHeavyMax);
 			//temp
@@ -186,6 +187,7 @@ int main(int argc, char* argv[]){
 			particles[i].p.x = genRand(drand48(), (double)0, (double)(width - 1));
 			particles[i].p.y = genRand(drand48(), (double)0, (double)(height - 1));
 			particles[i].p.z = genRand(drand48(), (double)0, (double)(zDepth - 1));
+			
 			//temp
 			pos[i].x = particles[i].p.x;
 			pos[i].y = particles[i].p.y;
@@ -201,15 +203,17 @@ int main(int argc, char* argv[]){
 				particles[i].v.z = -1 * genRand(drand48(), velocityHeavyMin, velocityHeavyMax);
 			}
 		} 
+
 	}
+	
+	printf("line: %d\n", 216);
+	printf("2nd my rank %d\n", my_rank);
+	printf("total particles  and rank %d, %d\n", totalParticles, my_rank);
+
+	MPI_Bcast(mas, totalParticles, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	MPI_Bcast(pos, totalParticles, mpi_vec3, 0, MPI_COMM_WORLD);
-	MPI_Bcast(mas, totalParticles, mpi_vec3, 0, MPI_COMM_WORLD);
 	
-	int blockSize = totalParticles / p;
-	vec3 *accelBlock;
-	accelBlock = (vec3 *)malloc(blockSize * sizeof(vec3));
-
 	//frame generation (per step)
 	for(int frame = 0; frame < numSteps; frame++){
 		
@@ -219,6 +223,7 @@ int main(int argc, char* argv[]){
 				image[i] = 0;
 			}
 		}
+		printf("line: %d", 224);
 		//sub step calculations
 		for(int step = 0; step < subSteps; step++){
 			
@@ -284,7 +289,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 		}
-
+		printf("line: %d", 290);
 		if(my_rank == 0){
 			//light(red), medium(green), heavy(blue)
 			int offset;
@@ -308,12 +313,13 @@ int main(int argc, char* argv[]){
 			saveBMP(filename.c_str(), image, width, height);
 		}
 	}
-			
+	
+/*		
 	//all other nodes do this
-	/*else{
+	else{
 
-	}*/
-
+	}
+	*/
 	if(my_rank == 0){
 		//timing data processing
 		double min = timing[0];
@@ -333,7 +339,7 @@ int main(int argc, char* argv[]){
 		printf("%f %f %f\n", min, max, avg);
 	}
 	
-	free(image);
+//	free(image);
 
 	MPI_Finalize();
 	return 0;
