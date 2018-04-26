@@ -62,17 +62,18 @@ int main(int argc, char* argv[]){
 	int numParticlesLight = atoi(argv[1]);
 	int numParticlesMedium = atoi(argv[2]);
 	int numParticlesHeavy = atoi(argv[3]);
+
+	int numSteps = atoi(argv[4]);
+	int subSteps = atoi(argv[5]);
+	double timeSubStep = atoi(argv[6]);
+
+	int width = atoi(argv[7]);
+	int height = atoi(argv[8]);
 	int totalParticles = numParticlesLight + numParticlesMedium + numParticlesHeavy;
 
 	int p, my_rank;
 
 	//variables
-
-	int numSteps = 0;
-	int subSteps = 0;
-	double timeSubStep;
-
-	int width, height;
 
 	Body particles[totalParticles];
 	vec3 accel[totalParticles];
@@ -82,10 +83,10 @@ int main(int argc, char* argv[]){
 	vec3 pos[totalParticles];
 	double mas[totalParticles];
 
-	unsigned char* image;	
+	unsigned char image[width*height*3];	
 
 	double start, end;
-	double *timing;
+	double timing[(numSteps*subSteps)];
 	int t = 0;
 
 	MPI_Init(&argc,&argv);
@@ -104,21 +105,13 @@ int main(int argc, char* argv[]){
 	//root node stuff goes here
 	if(my_rank == 0){
 
-		numSteps = atoi(argv[4]);
-		subSteps = atoi(argv[5]);
-		timeSubStep = atoi(argv[6]);
-
-		width = atoi(argv[7]);
-		height = atoi(argv[8]);
 
 		zDepth = 100;
 
-		image = (unsigned char *)malloc(width * height * 3 * sizeof(unsigned char));
 		//initialize image (all pixels to 0)
 		for(int i = 0; i < (width * height * 3); i++){
 			image[i] = 0;
 		}
-		timing = (double *)malloc(numSteps * subSteps * sizeof(double));
 
 		//initialize light particles (randomized)		
 
@@ -206,14 +199,11 @@ int main(int argc, char* argv[]){
 
 	}
 	
-	printf("line: %d\n", 216);
-	printf("2nd my rank %d\n", my_rank);
 	printf("total particles  and rank %d, %d\n", totalParticles, my_rank);
 
 	MPI_Bcast(mas, totalParticles, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	MPI_Bcast(pos, totalParticles, mpi_vec3, 0, MPI_COMM_WORLD);
-	
 	//frame generation (per step)
 	for(int frame = 0; frame < numSteps; frame++){
 		
@@ -223,7 +213,6 @@ int main(int argc, char* argv[]){
 				image[i] = 0;
 			}
 		}
-		printf("line: %d", 224);
 		//sub step calculations
 		for(int step = 0; step < subSteps; step++){
 			
@@ -238,7 +227,7 @@ int main(int argc, char* argv[]){
 			
 			MPI_Scatter(accel, blockSize, mpi_vec3, accelBlock, blockSize, mpi_vec3, 0, MPI_COMM_WORLD);
 
-			printf("Rank %d has %f\n", my_rank, accelBlock[0].x);
+			//printf("Rank %d has %f\n", my_rank, accelBlock[0].x);
 
 			start = MPI_Wtime();
 			computeAccel(pos, mas, accelBlock, blockSize);
@@ -246,7 +235,7 @@ int main(int argc, char* argv[]){
 			timing[t] = end - start;
 			t++;
 
-			printf("COMPUTES rank %d\n", my_rank);
+			//printf("COMPUTES rank %d\n", my_rank);
 
 			MPI_Gather(accelBlock, blockSize, mpi_vec3, accel, blockSize, mpi_vec3, 0, MPI_COMM_WORLD);
 
@@ -289,7 +278,6 @@ int main(int argc, char* argv[]){
 				}
 			}
 		}
-		printf("line: %d", 290);
 		if(my_rank == 0){
 			//light(red), medium(green), heavy(blue)
 			int offset;
@@ -340,7 +328,7 @@ int main(int argc, char* argv[]){
 	}
 	
 //	free(image);
-
+	printf("Done\n");
 	MPI_Finalize();
 	return 0;
 }
